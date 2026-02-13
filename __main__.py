@@ -8,8 +8,8 @@ def handle_arguments():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
     
-    subparsers.add_parser("repl", help="Run the CSVQL REPL").set_defaults(func=repl)
-    subparsers.add_parser("server", help="Run the CSVQL server").set_defaults(func=server)
+    subparsers.add_parser("repl", help="Run the mini-CSVQL REPL").set_defaults(func=repl)
+    subparsers.add_parser("server", help="Run the mini-CSVQL server").set_defaults(func=server)
     
     if len(sys.argv) == 1:
         parser.print_help()

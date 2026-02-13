@@ -60,7 +60,7 @@ create_subcommands = p.MatchFirst([
     (p.CaselessKeyword("DATABASE") + p.pyparsing_common.identifier),
     (
         p.CaselessKeyword("TABLE") + p.pyparsing_common.identifier
-        + p.Group(LP + p.DelimitedList(column) + RP)
+        + p.Group(LP.suppress() + p.DelimitedList(column) + RP.suppress())
     )
 ])
 drop_subcommands = p.MatchFirst(map(p.CaselessKeyword, "DATABASE TABLE".split()))
