@@ -1,6 +1,0 @@
-id,name,salary
-INT,STRING,FLOAT
-102,B,1250.5
-103,C,750.5
-105,E,950.0
-101,A,2000.0
