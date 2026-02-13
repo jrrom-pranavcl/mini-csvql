@@ -25,7 +25,6 @@ In mini-CSVQL, databases are just directories with a `database.json` file. To cr
 CREATE DATABASE name;
 ```
 
-Result:
 ```
 Database name successfully created.
 ```
