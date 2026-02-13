@@ -57,7 +57,7 @@ INSERT, PRINT = map(p.CaselessKeyword, commands.split())
 
 statements = {"PRINT": (PRINT + expression, evaluate_print)}
 
-sql_statement = p.MatchFirst(grammar for grammar, _ in statements.values()) + SC
+sql_statement = p.MatchFirst(grammar for grammar, _ in statements.values()) + SC.suppress()
 
 for grammar, handler in statements.values():
     grammar.add_parse_action(handler)
@@ -79,11 +79,16 @@ def interrupt_return(*interrupts):
     return decorator
 
 
-@interrupt_return(KeyboardInterrupt, p.ParseException, EOFError)
+@interrupt_return(KeyboardInterrupt, p.ParseException, EOFError, ZeroDivisionError)
 def repl():
     while True:
         line = input("> ")
-        sql_statement.parseString(line)
-
+        # Multiline support
+        while (line[-1] == "\\"):
+            line = line[:-1]
+            line += input("  ")
+        print(
+            sql_statement.parseString(line)[0]
+        )
 
 # ==========================================

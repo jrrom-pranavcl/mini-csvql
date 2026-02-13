@@ -20,4 +20,4 @@ def evaluate_values(tokens):
 
 
 def evaluate_print(tokens):
-    print(tokens[1])
+    return tokens[1]
