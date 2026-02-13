@@ -117,3 +117,60 @@ DROP TABLE name;
 ```
 Table successfully dropped.
 ```
+
+### Display all tables
+
+```sql
+SHOW TABLES;
+```
+
+```
+employees employers administrators
+```
+
+### Insert values
+
+Note: FLOAT datatypes need to have a decimal point and at least 0 on the right hand side always.
+
+```sql
+INSERT INTO employees VALUES(101, "A", 1000.0);
+```
+
+```
+Successfully inserted into table employees
+```
+
+### Select values
+
+We can select all entries.
+
+```sql
+SELECT * FROM employees;
+```
+
+```
+┌─────┬──────┬────────┐
+│ id  ┆ name ┆ salary │
+╞═════╪══════╪════════╡
+│ 101 ┆ A    ┆ 1000.0 │
+│ 102 ┆ B    ┆ 1250.5 │
+│ 103 ┆ C    ┆ 750.5  │
+│ 104 ┆ D    ┆ 1150.5 │
+│ 105 ┆ E    ┆ 950.0  │
+└─────┴──────┴────────┘
+```
+
+We can also use the `WHERE` clause to filter entries.
+
+```sql
+select * from employees where salary > 800 and salary < 1100;
+```
+
+```
+┌─────┬──────┬────────┐
+│ id  ┆ name ┆ salary │
+╞═════╪══════╪════════╡
+│ 101 ┆ A    ┆ 1000.0 │
+│ 105 ┆ E    ┆ 950.0  │
+└─────┴──────┴────────┘
+```
