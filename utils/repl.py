@@ -6,12 +6,14 @@ import sys
 # ==========================================
 
 datatypes = {
-    "FLOAT": p.pyparsing_common.ieee_float,
+    "FLOAT": p.pyparsing_common.real,
     "INT": p.pyparsing_common.signed_integer,
     "STRING": p.quoted_string().set_parse_action(p.remove_quotes),
 }
 
 datatype_constraints = p.MatchFirst(map(p.CaselessKeyword, datatypes.keys()))
+datatype = p.MatchFirst(datatypes.values())
+number = p.MatchFirst([datatypes["FLOAT"], datatypes["INT"]])
 
 # ==========================================
 
@@ -25,8 +27,12 @@ operators = ADD | SUB | MUL | DIV
 
 expressions = {
     "arithmetic": (
-        datatypes["INT"] + p.ZeroOrMore(operators + datatypes["INT"]),
+        number + p.ZeroOrMore(operators + number),
         evaluate_arithmetic,
+    ),
+    "values": (
+        p.CaselessKeyword("VALUES") + LP + p.delimited_list(datatype) + RP,
+        evaluate_values
     )
 }
 
@@ -73,7 +79,7 @@ def interrupt_return(*interrupts):
     return decorator
 
 
-@interrupt_return(KeyboardInterrupt, p.ParseException)
+@interrupt_return(KeyboardInterrupt, p.ParseException, EOFError)
 def repl():
     while True:
         line = input("> ")
