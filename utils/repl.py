@@ -1,17 +1,11 @@
 from .evaluate import *
+from .constraints import datatypes, datatype_constraints
 import pyparsing as p
 import readline
 import sys
 
 # ==========================================
 
-datatypes = {
-    "FLOAT": p.pyparsing_common.real,
-    "INT": p.pyparsing_common.signed_integer,
-    "STRING": p.quoted_string().set_parse_action(p.remove_quotes),
-}
-
-datatype_constraints = p.MatchFirst(map(p.CaselessKeyword, datatypes.keys()))
 datatype = p.MatchFirst(datatypes.values())
 number = p.MatchFirst([datatypes["FLOAT"], datatypes["INT"]])
 
@@ -50,10 +44,10 @@ expression = p.MatchFirst(
 # ==========================================
 
 commands = """
-  CREATE DROP SHOW PRINT USE
+  CREATE DROP SHOW INSERT PRINT USE
 """
 
-CREATE, DROP, SHOW, PRINT, USE = map(p.CaselessKeyword, commands.split())
+CREATE, DROP, SHOW, INSERT, PRINT, USE = map(p.CaselessKeyword, commands.split())
 
 column = p.Group(p.pyparsing_common.identifier + datatype_constraints)
 create_subcommands = p.MatchFirst([
@@ -70,14 +64,17 @@ statements = {
     "CREATE": (CREATE + create_subcommands, evaluate_create),
     "DROP": (DROP + drop_subcommands + p.pyparsing_common.identifier, evaluate_drop),
     "SHOW": (SHOW + show_subcommands, evaluate_show),
+    "INSERT": (INSERT + p.CaselessKeyword("INTO") + p.pyparsing_common.identifier + expressions["values"][0], evaluate_insert),
     "PRINT": (PRINT + expression, evaluate_print),
     "USE": (USE + p.pyparsing_common.identifier, evaluate_use),
 }
 
-sql_statement = p.MatchFirst(grammar for grammar, _ in statements.values()) + SC.suppress()
-
 for grammar, handler in statements.values():
     grammar.add_parse_action(handler)
+    
+sql_statement = p.MatchFirst([
+    grammar for grammar, _ in statements.values()
+]) + SC.suppress()
 
 # ==========================================
 

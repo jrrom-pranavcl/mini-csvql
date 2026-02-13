@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any, cast
+from .constraints import datatypes
+import csv
 import json
 import os
 import polars as pl
@@ -18,6 +21,36 @@ def create_config():
 
 def is_database(dir: Path):
     return (dir / "database.json").exists()
+
+def check_if_state_path_exists(func):
+    def wrapper(tokens):
+        if not State.path:
+            return "Database not selected."
+        return func(tokens)
+    return wrapper
+
+def check_if_obeys_constraints(file: Path, values: list[Any]):
+    df = pl.read_csv(file)
+
+    if len(values) != len(df.columns):
+        return "The number of values does not match the number of columns."
+
+    constraints = df.row(0)
+
+    for i in range(len(values)):
+        to_check = str(values[i])
+        
+        if constraints[i] == "STRING" and type(values[i]) == str:
+            to_check = f"'{to_check}'"
+
+        try:
+            if not datatypes[constraints[i]].parse_string(to_check):
+                return "It cannot be inserted because it does not follow constraints."
+        except p.ParseException as e:
+            return "It cannot be inserted because it does not follow constraints."
+
+    return True
+        
 
 @dataclass
 class State:
@@ -44,7 +77,6 @@ def create_starter_frame(name, constraint_pairs: list[list[str]]):
     # Create DataFrame with constraints as first row
     df = pl.DataFrame([constraints], schema=columns, orient="row")
     df.write_csv((State.path / name).with_suffix(".csv"))
-    return
 
 # ==========================================
 # Statements
@@ -67,6 +99,7 @@ def evaluate_create(tokens):
         return f"Database {str(name)} successfully created."
     if (command == "TABLE"):
         columns_pairs = tokens[3]
+        columns_pairs = cast(list[list[str]], columns_pairs)
         if not State.path:
             return "Database not selected."
         create_starter_frame(name, columns_pairs)
@@ -109,6 +142,27 @@ def evaluate_show(tokens):
             result += str(file.stem) + " "
         if result == "": return "No tables in the current database."
         return result
+
+# =======
+# For tables
+# =======
+
+@check_if_state_path_exists
+def evaluate_insert(tokens):
+    table, values = tokens[2:]
+    table = cast(str, table)
+    
+    State.path = cast(Path, State.path)
+    file = State.path / (table + ".csv")
+    if not file.exists():
+        return f"The table {table} does not exist in the database {State.path.stem}"
+    result = check_if_obeys_constraints(file, values)
+    if result == True:
+        with open(file, 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(values)
+            return f"Successfully inserted into table {table}"
+    return result
 
 # =======
 # Utility
